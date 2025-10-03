@@ -2,8 +2,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import io
-
+import gspread
+from gspread_dataframe import set_with_dataframe
 # --- PALETA DE CORES E CONFIGURAÇÃO DA PÁGINA ---
 COLOR_PRIMARY = "#70D1C6" # Cor da logo Wedja
 COLOR_TEXT_DARK = "#333333"
@@ -78,6 +78,27 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
+try:
+    # Cria uma cópia editável das credenciais
+    creds_dict = dict(st.secrets["google_credentials"])
+    # Corrige a formatação da chave privada
+    creds_dict['private_key'] = creds_dict['private_key'].replace('\\n', '\n')
+    
+    # Autentica no Google
+    gc = gspread.service_account_from_dict(creds_dict)
+    
+    # Abre a planilha pelo nome exato
+    spreadsheet = gc.open("Respostas Formularios")
+    
+    # Seleciona a primeira aba
+    worksheet = spreadsheet.sheet1
+
+except Exception as e:
+    st.error(f"Erro ao conectar com o Google Sheets: {e}")
+    st.stop()
+
+# Seleciona as abas fora da função de cache
+ws_respostas = spreadsheet.worksheet("Fatores")
 # --- CABEÇALHO DA APLICAÇÃO ---
 col1, col2 = st.columns([1, 4])
 with col1:
@@ -156,7 +177,6 @@ for bloco in blocos:
                 on_change=registrar_resposta, args=(item_id, widget_key)
             )
 
-observacoes = st.text_area("Observações (opcional):")
 
 # --- BOTÃO DE FINALIZAR E LÓGICA DE RESULTADOS/EXPORTAÇÃO ---
 if st.button("Finalizar e Gerar Relatório", type="primary"):
@@ -198,38 +218,30 @@ if st.button("Finalizar e Gerar Relatório", type="primary"):
             st.subheader("Gráfico Comparativo por Dimensão")
             st.bar_chart(resumo_blocos.set_index("Bloco")["Média"])
 
-        # --- LÓGICA DE EXPORTAÇÃO ---
-        st.subheader("Exportar Dados")
-        dfr_respostas = dfr[['Bloco', 'Item', 'Resposta']].copy()
-        dfr_respostas = dfr_respostas.rename(columns={"Bloco": "Dimensão"})
-        dfr_respostas['Resposta'] = dfr_respostas['Resposta'].fillna('N/A')
-        
-        timestamp_str = datetime.now().isoformat(timespec="seconds")
-        # ##### ALTERAÇÃO: Atualiza os dados do cabeçalho para a exportação #####
-        dados_cabecalho = {'Campo': ["Timestamp", "Respondente", "Data", "Organização Coletora"],
-                           'Valor': [timestamp_str, respondente, data, organizacao_coletora]}
-        df_cabecalho = pd.DataFrame(dados_cabecalho)
+        with st.spinner("Enviando dados para a planilha..."):
+            try:
+                # 1. Preparar dados para o envio
+                timestamp_str = datetime.now().isoformat(timespec="seconds")
+                respostas_para_enviar = []
+                
+                # O DataFrame 'dfr' já foi criado na seção de cálculo
+                for _, row in dfr.iterrows():
+                    respostas_para_enviar.append([
+                        timestamp_str,
+                        respondente,
+                        data,
+                        organizacao_coletora,
+                        row["Bloco"],
+                        row["Item"],
+                        row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
+                        observacoes # Adiciona as observações em cada linha
+                    ])
+                
+                # 2. Enviar para a aba "Fatores Essenciais"
+                ws_respostas.append_rows(respostas_para_enviar, value_input_option='USER_ENTERED')
+                
+                st.success("Suas respostas foram enviadas com sucesso para a planilha!")
 
-        dados_obs = {"Timestamp": [timestamp_str], "Respondente": [respondente], "Data": [data], "Observações": [observacoes]}
-        dfr_observacoes = pd.DataFrame(dados_obs)
-        
-        dados_media = {'Dimensão': ['PONTUAÇÃO MÉDIA GERAL'], 'Item': [''], 'Resposta': [f"{media_geral:.2f}"]}
-        df_media = pd.DataFrame(dados_media)
-        
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df_cabecalho.to_excel(writer, sheet_name='Respostas', index=False, header=False, startrow=0)
-            dfr_respostas.to_excel(writer, sheet_name='Respostas', index=False, startrow=len(df_cabecalho) + 1)
-            start_row_media = len(df_cabecalho) + len(dfr_respostas) + 3
-            df_media.to_excel(writer, sheet_name='Respostas', index=False, header=False, startrow=start_row_media)
-            dfr_observacoes.to_excel(writer, sheet_name='Observacoes', index=False)
-        
-        processed_data = output.getvalue()
-        
-        st.download_button(
-            label="Baixar respostas completas (Excel)",
-            data=processed_data,
-            file_name=f"fatores_essenciais_respostas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
-        st.success("Arquivo pronto para download!")
+            except Exception as e:
+                st.error(f"Erro ao enviar dados para a planilha: {e}")
+        # --- FIM DO TRECHO DE ENVIO ---
