@@ -234,7 +234,7 @@ if st.button("Finalizar e Gerar Relatório", type="primary"):
                         row["Bloco"],
                         row["Item"],
                         row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
-                        observacoes # Adiciona as observações em cada linha
+                        #observacoes # Adiciona as observações em cada linha
                     ])
                 
                 # 2. Enviar para a aba "Fatores Essenciais"
