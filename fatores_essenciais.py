@@ -106,14 +106,14 @@ blocos = df_itens["Bloco"].unique().tolist()
 def registrar_resposta(item_id, key):
     st.session_state.respostas[item_id] = st.session_state[key]
 
-# ##### ALTERAÇÕES APLICADAS AQUI #####
 for bloco in blocos:
-    # 1. Título do expander modificado para mostrar apenas o nome do bloco
-    with st.expander(f"{bloco}", expanded=True):
-        df_bloco = df_itens[df_itens["Bloco"] == bloco]
+    df_bloco = df_itens[df_itens["Bloco"] == bloco]
+    
+    prefixo_bloco = df_bloco['ID'].iloc[0][:2] if not df_bloco.empty else bloco
+    
+    with st.expander(f"{prefixo_bloco}", expanded=True):
         for _, row in df_bloco.iterrows():
             item_id = row["ID"]
-            # 2. Label do item modificado para mostrar apenas o ID
             label = f'({item_id})' + (' (R)' if row["Reverso"] == 'SIM' else '')
             widget_key = f"radio_{item_id}"
             st.radio(
@@ -122,8 +122,7 @@ for bloco in blocos:
                 on_change=registrar_resposta, args=(item_id, widget_key)
             )
 
-# O campo de observações é mantido, mas não é enviado para a planilha
-observacoes = st.text_area("Observações (opcional):")
+# O campo de observações foi removido desta seção
 
 # --- BOTÃO DE FINALIZAR E LÓGICA DE RESULTADOS/EXPORTAÇÃO ---
 if st.button("Finalizar e Enviar Respostas", type="primary"):
