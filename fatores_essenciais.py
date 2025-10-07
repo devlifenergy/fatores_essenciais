@@ -17,7 +17,7 @@ st.set_page_config(
 # --- CSS CUSTOMIZADO (Omitido para economizar espaço) ---
 st.markdown(f"""<style>...</style>""", unsafe_allow_html=True)
 
-# --- CONEXÃO COM GOOGLE SHEETS (MODIFICADO) ---
+# --- CONEXÃO COM GOOGLE SHEETS (COM CACHE) ---
 @st.cache_resource
 def connect_to_gsheet():
     """Conecta ao Google Sheets e retorna o objeto da aba de respostas."""
@@ -29,13 +29,11 @@ def connect_to_gsheet():
         
         spreadsheet = gc.open("Respostas Formularios")
         
-        # Retorna apenas a aba de respostas que vamos usar
         return spreadsheet.worksheet("Fatores")
     except Exception as e:
         st.error(f"Erro ao conectar com o Google Sheets: {e}")
         return None
 
-# Apenas uma variável é retornada agora
 ws_respostas = connect_to_gsheet()
 
 if ws_respostas is None:
@@ -108,12 +106,15 @@ blocos = df_itens["Bloco"].unique().tolist()
 def registrar_resposta(item_id, key):
     st.session_state.respostas[item_id] = st.session_state[key]
 
+# ##### ALTERAÇÕES APLICADAS AQUI #####
 for bloco in blocos:
-    with st.expander(f"Dimensão: {bloco}", expanded=True):
+    # 1. Título do expander modificado para mostrar apenas o nome do bloco
+    with st.expander(f"{bloco}", expanded=True):
         df_bloco = df_itens[df_itens["Bloco"] == bloco]
         for _, row in df_bloco.iterrows():
             item_id = row["ID"]
-            label = f'({item_id}) {row["Item"]}' + (' (R)' if row["Reverso"] == 'SIM' else '')
+            # 2. Label do item modificado para mostrar apenas o ID
+            label = f'({item_id})' + (' (R)' if row["Reverso"] == 'SIM' else '')
             widget_key = f"radio_{item_id}"
             st.radio(
                 label, options=["N/A", 1, 2, 3, 4, 5],
@@ -121,7 +122,7 @@ for bloco in blocos:
                 on_change=registrar_resposta, args=(item_id, widget_key)
             )
 
-# O campo de observações continua aqui, mas não será enviado
+# O campo de observações é mantido, mas não é enviado para a planilha
 observacoes = st.text_area("Observações (opcional):")
 
 # --- BOTÃO DE FINALIZAR E LÓGICA DE RESULTADOS/EXPORTAÇÃO ---
@@ -162,7 +163,7 @@ if st.button("Finalizar e Enviar Respostas", type="primary"):
             st.subheader("Gráfico Comparativo por Dimensão")
             st.bar_chart(resumo_blocos.set_index("Bloco")["Média"])
         
-        # --- LÓGICA DE ENVIO PARA GOOGLE SHEETS (MODIFICADA) ---
+        # --- LÓGICA DE ENVIO PARA GOOGLE SHEETS ---
         with st.spinner("Enviando dados para a planilha..."):
             try:
                 timestamp_str = datetime.now().isoformat(timespec="seconds")
@@ -179,11 +180,8 @@ if st.button("Finalizar e Enviar Respostas", type="primary"):
                         row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
                     ])
                 
-                # Envia os dados para a aba de respostas
                 ws_respostas.append_rows(respostas_para_enviar, value_input_option='USER_ENTERED')
                 
-                # O bloco de código que enviava para ws_observacoes foi removido
-
                 st.success("Suas respostas foram enviadas com sucesso para a planilha!")
                 st.balloons()
             except Exception as e:
