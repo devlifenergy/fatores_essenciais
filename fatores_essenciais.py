@@ -16,8 +16,69 @@ st.set_page_config(
 )
 
 # --- CSS CUSTOMIZADO (Omitido para economizar espaço) ---
-st.markdown(f"""<style>...</style>""", unsafe_allow_html=True)
-
+st.markdown(f"""
+    <style>
+        /* Remoção de elementos do Streamlit Cloud */
+        div[data-testid="stHeader"], div[data-testid="stDecoration"] {{
+            visibility: hidden; height: 0%; position: fixed;
+        }}
+        footer {{ visibility: hidden; height: 0%; }}
+        /* Estilos gerais */
+        .stApp {{ background-color: {COLOR_BACKGROUND}; color: {COLOR_TEXT_DARK}; }}
+        h1, h2, h3 {{ color: {COLOR_TEXT_DARK}; }}
+        /* Cabeçalho customizado */
+        .stApp > header {{
+            background-color: {COLOR_PRIMARY}; padding: 1rem;
+            border-bottom: 5px solid {COLOR_TEXT_DARK};
+        }}
+        /* Card de container */
+        div.st-emotion-cache-1r4qj8v {{
+             background-color: #f0f2f6; border-left: 5px solid {COLOR_PRIMARY};
+             border-radius: 5px; padding: 1.5rem; margin-top: 1rem;
+             margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }}
+        /* Inputs e Labels */
+        div[data-testid="textInputRootElement"] > label,
+        div[data-testid="stTextArea"] > label,
+        div[data-testid="stRadioGroup"] > label {{
+            color: {COLOR_TEXT_DARK}; font-weight: 600;
+        }}
+        div[data-testid="stTextInput"] input,
+        div[data-testid="stNumberInput"] input,
+        div[data-testid="stSelectbox"] > div,
+        div[data-testid="stTextArea"] textarea {{
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+            background-color: #FFFFFF;
+        }}
+        /* Expanders */
+        .streamlit-expanderHeader {{
+            background-color: {COLOR_PRIMARY}; color: white; font-size: 1.2rem;
+            font-weight: bold; border-radius: 8px; margin-top: 1rem;
+            padding: 0.75rem 1rem; border: none; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }}
+        .streamlit-expanderHeader:hover {{ background-color: {COLOR_TEXT_DARK}; }}
+        .streamlit-expanderContent {{
+            background-color: #f9f9f9; border-left: 3px solid {COLOR_PRIMARY}; padding: 1rem;
+            border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; margin-bottom: 1rem;
+        }}
+        /* Botões de rádio (Likert) responsivos */
+        div[data-testid="stRadio"] > div {{
+            display: flex; flex-wrap: wrap; justify-content: flex-start;
+        }}
+        div[data-testid="stRadio"] label {{
+            margin-right: 1.2rem; margin-bottom: 0.5rem; color: {COLOR_TEXT_DARK};
+        }}
+        /* Botão de Finalizar */
+        .stButton button {{
+            background-color: {COLOR_PRIMARY}; color: white; font-weight: bold;
+            padding: 0.75rem 1.5rem; border-radius: 8px; border: none;
+        }}
+        .stButton button:hover {{
+            background-color: {COLOR_TEXT_DARK}; color: white;
+        }}
+    </style>
+""", unsafe_allow_html=True)
 # --- CONEXÃO COM GOOGLE SHEETS (COM CACHE) ---
 @st.cache_resource
 def connect_to_gsheet():
