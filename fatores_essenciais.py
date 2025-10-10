@@ -27,10 +27,9 @@ def connect_to_gsheet():
         creds_dict['private_key'] = creds_dict['private_key'].replace('\\n', '\n')
         
         gc = gspread.service_account_from_dict(creds_dict)
-        
         spreadsheet = gc.open("Respostas Formularios")
         
-        return spreadsheet.worksheet("Fatores")
+        return spreadsheet.worksheet("Fatores_Essenciais")
     except Exception as e:
         st.error(f"Erro ao conectar com o Google Sheets: {e}")
         return None
@@ -38,7 +37,7 @@ def connect_to_gsheet():
 ws_respostas = connect_to_gsheet()
 
 if ws_respostas is None:
-    st.error("Não foi possível conectar à aba 'Fatores' da planilha. Verifique o nome e as permissões.")
+    st.error("Não foi possível conectar à aba 'Fatores_Essenciais' da planilha. Verifique o nome e as permissões.")
     st.stop()
 
 
