@@ -4,7 +4,7 @@ on:
   schedule:
     # Roda todos os dias às 12:00 UTC (9:00 no horário de Brasília)
     # Você pode ajustar o horário. "0 12 * * *" significa "às 12h00, todos os dias".
-    - cron: '0 12 * * *'
+    - cron: '0 */2 * * *'
   
   # Esta linha é essencial para o teste manual:
   workflow_dispatch:
