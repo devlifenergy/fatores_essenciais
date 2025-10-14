@@ -21,9 +21,9 @@ st.markdown(f"""
         div[data-testid="stHeader"], div[data-testid="stDecoration"] {{
             visibility: hidden; height: 0%; position: fixed;
         }}
-        #autoclick-div {
+        #autoclick-div {{
             display: none;
-        }
+        }}
         footer {{ visibility: hidden; height: 0%; }}
         /* Estilos gerais */
         .stApp {{ background-color: {COLOR_BACKGROUND}; color: {COLOR_TEXT_DARK}; }}
