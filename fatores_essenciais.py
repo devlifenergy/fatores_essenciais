@@ -22,12 +22,10 @@ st.markdown(f"""
             visibility: hidden; height: 0%; position: fixed;
         }}
         
-        /* ##### CÓDIGO QUE ESCONDE O BOTÃO PING ##### */
         #autoclick-div {{
             display: none; 
         }}
-        /* ############################################## */
-
+        
         footer {{ visibility: hidden; height: 0%; }}
         /* Estilos gerais */
         .stApp {{ background-color: {COLOR_BACKGROUND}; color: {COLOR_TEXT_DARK}; }}
@@ -220,14 +218,6 @@ if st.button("Finalizar e Enviar Respostas", type="primary"):
         else:
             media_geral = 0
             resumo_blocos = pd.DataFrame(columns=["Bloco", "Média"])
-
-        # ##### LINHAS REMOVIDAS #####
-        # st.metric("Pontuação Média Geral (somente itens de 1 a 5)", f"{media_geral:.2f}")
-        # if not resumo_blocos.empty:
-        #     st.subheader("Média por Dimensão")
-        #     st.dataframe(resumo_blocos.rename(columns={"Bloco": "Dimensão"}), use_container_width=True, hide_index=True)
-        #     # Gráfico também removido
-        # #############################
         
         # --- LÓGICA DE ENVIO PARA GOOGLE SHEETS ---
         with st.spinner("Enviando dados para a planilha..."):
