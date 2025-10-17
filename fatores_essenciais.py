@@ -23,7 +23,7 @@ st.markdown(f"""
         }}
         
         #autoclick-div {{
-            display: none; 
+            display: none !important; 
         }}
         
         footer {{ visibility: hidden; height: 0%; }}
