@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt # Removido pois o gráfico foi removido
 
 # --- PALETA DE CORES E CONFIGURAÇÃO DA PÁGINA ---
 COLOR_PRIMARY = "#70D1C6"
@@ -15,15 +15,19 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS CUSTOMIZADO (Omitido para economizar espaço) ---
+# --- CSS CUSTOMIZADO ---
 st.markdown(f"""
     <style>
+        /* Remoção de elementos do Streamlit Cloud */
         div[data-testid="stHeader"], div[data-testid="stDecoration"] {{
             visibility: hidden; height: 0%; position: fixed;
         }}
+        
+        /* Código que esconde o botão ping */
         #autoclick-div {{
-            display: none;
+            display: none !important; 
         }}
+        
         footer {{ visibility: hidden; height: 0%; }}
         /* Estilos gerais */
         .stApp {{ background-color: {COLOR_BACKGROUND}; color: {COLOR_TEXT_DARK}; }}
@@ -39,12 +43,13 @@ st.markdown(f"""
              border-radius: 5px; padding: 1.5rem; margin-top: 1rem;
              margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }}
-        /* Inputs e Labels */
+        /* Labels dos Inputs */
         div[data-testid="textInputRootElement"] > label,
         div[data-testid="stTextArea"] > label,
         div[data-testid="stRadioGroup"] > label {{
             color: {COLOR_TEXT_DARK}; font-weight: 600;
         }}
+        /* Bordas dos campos de input */
         div[data-testid="stTextInput"] input,
         div[data-testid="stNumberInput"] input,
         div[data-testid="stSelectbox"] > div,
@@ -81,6 +86,7 @@ st.markdown(f"""
         }}
     </style>
 """, unsafe_allow_html=True)
+
 # --- CONEXÃO COM GOOGLE SHEETS (COM CACHE) ---
 @st.cache_resource
 def connect_to_gsheet():
@@ -100,7 +106,7 @@ def connect_to_gsheet():
 ws_respostas = connect_to_gsheet()
 
 if ws_respostas is None:
-    st.error("Não foi possível conectar à aba 'Fatores_Essenciais' da planilha. Verifique o nome e as permissões.")
+    st.error("Não foi possível conectar à aba 'Fatores_Essenciais' da planilha.")
     st.stop()
 
 
@@ -185,16 +191,14 @@ for bloco in blocos:
                 on_change=registrar_resposta, args=(item_id, widget_key)
             )
 
-# O campo de observações foi removido desta seção
-
 # --- BOTÃO DE FINALIZAR E LÓGICA DE RESULTADOS/EXPORTAÇÃO ---
 if st.button("Finalizar e Enviar Respostas", type="primary"):
     if not st.session_state.respostas:
         st.warning("Nenhuma resposta foi preenchida.")
     else:
-        st.subheader("Resultados e Envio")
+        st.subheader("Enviando Respostas...") # Título ajustado
 
-        # --- LÓGICA DE CÁLCULO ---
+        # --- LÓGICA DE CÁLCULO (mantida internamente para envio) ---
         respostas_list = []
         for index, row in df_itens.iterrows():
             item_id = row['ID']
@@ -205,6 +209,7 @@ if st.button("Finalizar e Enviar Respostas", type="primary"):
             })
         dfr = pd.DataFrame(respostas_list)
 
+        # O cálculo da média ainda é feito aqui, mas não será exibido
         dfr_numerico = dfr[pd.to_numeric(dfr['Resposta'], errors='coerce').notna()].copy()
         if not dfr_numerico.empty:
             dfr_numerico['Resposta'] = dfr_numerico['Resposta'].astype(int)
@@ -217,26 +222,13 @@ if st.button("Finalizar e Enviar Respostas", type="primary"):
             media_geral = 0
             resumo_blocos = pd.DataFrame(columns=["Bloco", "Média"])
 
-        st.metric("Pontuação Média Geral (somente itens de 1 a 5)", f"{media_geral:.2f}")
-
-        if not resumo_blocos.empty:
-            st.subheader("Média por Dimensão")
-            st.dataframe(resumo_blocos.rename(columns={"Bloco": "Dimensão"}), use_container_width=True, hide_index=True)
-            st.subheader("Gráfico Comparativo por Dimensão")
-            
-            # --- CÓDIGO DO GRÁFICO DE PIZZA ---
-            # Cria a figura e os eixos do gráfico
-            fig, ax = plt.subplots()
-            
-            # Gera o gráfico de pizza, com cores diferentes para cada fatia
-            ax.pie(x=resumo_blocos["Média"], labels=resumo_blocos["Bloco"], autopct='%1.1f%%', startangle=90)
-            
-            # Garante que o gráfico seja desenhado como um círculo
-            ax.axis('equal')  
-            
-            # Exibe o gráfico gerado no Streamlit
-            st.pyplot(fig)
-            # --- FIM DO CÓDIGO DO GRÁFICO DE PIZZA ---
+        # ##### LINHAS REMOVIDAS #####
+        # st.metric("Pontuação Média Geral (somente itens de 1 a 5)", f"{media_geral:.2f}")
+        # if not resumo_blocos.empty:
+        #     st.subheader("Média por Dimensão")
+        #     st.dataframe(resumo_blocos.rename(columns={"Bloco": "Dimensão"}), use_container_width=True, hide_index=True)
+        #     # O gráfico já havia sido removido
+        # #############################
         
         # --- LÓGICA DE ENVIO PARA GOOGLE SHEETS ---
         with st.spinner("Enviando dados para a planilha..."):
@@ -262,9 +254,9 @@ if st.button("Finalizar e Enviar Respostas", type="primary"):
             except Exception as e:
                 st.error(f"Erro ao enviar dados para a planilha: {e}")
 
-    with st.empty():
-        st.markdown('<div id="autoclick-div">', unsafe_allow_html=True)
-        if st.button("Ping Button", key="autoclick_button"):
-        # A ação aqui pode ser um simples print no log do Streamlit
-            print("Ping button clicked by automation.")
-        st.markdown('</div>', unsafe_allow_html=True)
+# --- BOTÃO INVISÍVEL PARA PINGER ---
+with st.empty():
+    st.markdown('<div id="autoclick-div">', unsafe_allow_html=True)
+    if st.button("Ping Button", key="autoclick_button"):
+        print("Ping button clicked by automation.")
+    st.markdown('</div>', unsafe_allow_html=True)
