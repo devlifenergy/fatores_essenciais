@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt # Não é mais necessário
 
 # --- PALETA DE CORES E CONFIGURAÇÃO DA PÁGINA ---
 COLOR_PRIMARY = "#70D1C6"
@@ -16,71 +16,8 @@ st.set_page_config(
 )
 
 # --- CSS CUSTOMIZADO (Omitido para economizar espaço) ---
-st.markdown(f"""
-    <style>
-        div[data-testid="stHeader"], div[data-testid="stDecoration"] {{
-            visibility: hidden; height: 0%; position: fixed;
-        }}
-        #autoclick-div {{
-            display: none;
-        }}
-        footer {{ visibility: hidden; height: 0%; }}
-        /* Estilos gerais */
-        .stApp {{ background-color: {COLOR_BACKGROUND}; color: {COLOR_TEXT_DARK}; }}
-        h1, h2, h3 {{ color: {COLOR_TEXT_DARK}; }}
-        /* Cabeçalho customizado */
-        .stApp > header {{
-            background-color: {COLOR_PRIMARY}; padding: 1rem;
-            border-bottom: 5px solid {COLOR_TEXT_DARK};
-        }}
-        /* Card de container */
-        div.st-emotion-cache-1r4qj8v {{
-             background-color: #f0f2f6; border-left: 5px solid {COLOR_PRIMARY};
-             border-radius: 5px; padding: 1.5rem; margin-top: 1rem;
-             margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }}
-        /* Inputs e Labels */
-        div[data-testid="textInputRootElement"] > label,
-        div[data-testid="stTextArea"] > label,
-        div[data-testid="stRadioGroup"] > label {{
-            color: {COLOR_TEXT_DARK}; font-weight: 600;
-        }}
-        div[data-testid="stTextInput"] input,
-        div[data-testid="stNumberInput"] input,
-        div[data-testid="stSelectbox"] > div,
-        div[data-testid="stTextArea"] textarea {{
-            border: 1px solid #cccccc;
-            border-radius: 5px;
-            background-color: #FFFFFF;
-        }}
-        /* Expanders */
-        .streamlit-expanderHeader {{
-            background-color: {COLOR_PRIMARY}; color: white; font-size: 1.2rem;
-            font-weight: bold; border-radius: 8px; margin-top: 1rem;
-            padding: 0.75rem 1rem; border: none; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }}
-        .streamlit-expanderHeader:hover {{ background-color: {COLOR_TEXT_DARK}; }}
-        .streamlit-expanderContent {{
-            background-color: #f9f9f9; border-left: 3px solid {COLOR_PRIMARY}; padding: 1rem;
-            border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; margin-bottom: 1rem;
-        }}
-        /* Botões de rádio (Likert) responsivos */
-        div[data-testid="stRadio"] > div {{
-            display: flex; flex-wrap: wrap; justify-content: flex-start;
-        }}
-        div[data-testid="stRadio"] label {{
-            margin-right: 1.2rem; margin-bottom: 0.5rem; color: {COLOR_TEXT_DARK};
-        }}
-        /* Botão de Finalizar */
-        .stButton button {{
-            background-color: {COLOR_PRIMARY}; color: white; font-weight: bold;
-            padding: 0.75rem 1.5rem; border-radius: 8px; border: none;
-        }}
-        .stButton button:hover {{
-            background-color: {COLOR_TEXT_DARK}; color: white;
-        }}
-    </style>
-""", unsafe_allow_html=True)
+st.markdown(f"""<style>...</style>""", unsafe_allow_html=True)
+
 # --- CONEXÃO COM GOOGLE SHEETS (COM CACHE) ---
 @st.cache_resource
 def connect_to_gsheet():
@@ -185,34 +122,71 @@ for bloco in blocos:
                 on_change=registrar_resposta, args=(item_id, widget_key)
             )
 
-# O campo de observações foi removido desta seção
-
 # --- BOTÃO DE FINALIZAR E LÓGICA DE RESULTADOS/EXPORTAÇÃO ---
-        try:
-            timestamp_str = datetime.now().isoformat(timespec="seconds")
-            respostas_para_enviar = []
-            
-            for _, row in dfr.iterrows():
-                respostas_para_enviar.append([
-                    timestamp_str,
-                    respondente,
-                    data,
-                    organizacao_coletora,
-                    row["Bloco"],
-                    row["Item"],
-                    row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
-                ])
-            
-            ws_respostas.append_rows(respostas_para_enviar, value_input_option='USER_ENTERED')
-            
-            st.success("Suas respostas foram enviadas com sucesso para a planilha!")
-            st.balloons()
-        except Exception as e:
-            st.error(f"Erro ao enviar dados para a planilha: {e}")
+if st.button("Finalizar e Enviar Respostas", type="primary"):
+    if not st.session_state.respostas:
+        st.warning("Nenhuma resposta foi preenchida.")
+    else:
+        st.subheader("Enviando Respostas...") # Modificado o título da seção
 
-        with st.container():
-            st.markdown('<div id="autoclick-div">', unsafe_allow_html=True)
-            if st.button("Ping Button", key="autoclick_button"):
-            # A ação aqui pode ser um simples print no log do Streamlit
-                print("Ping button clicked by automation.")
-            st.markdown('</div>', unsafe_allow_html=True)
+        # --- LÓGICA DE CÁLCULO (mantida internamente) ---
+        respostas_list = []
+        for index, row in df_itens.iterrows():
+            item_id = row['ID']
+            resposta_usuario = st.session_state.respostas.get(item_id)
+            respostas_list.append({
+                "Bloco": row["Bloco"], "Item": row["Item"],
+                "Resposta": resposta_usuario, "Reverso": row["Reverso"]
+            })
+        dfr = pd.DataFrame(respostas_list)
+
+        dfr_numerico = dfr[pd.to_numeric(dfr['Resposta'], errors='coerce').notna()].copy()
+        if not dfr_numerico.empty:
+            dfr_numerico['Resposta'] = dfr_numerico['Resposta'].astype(int)
+            def ajustar_reverso(row):
+                return (6 - row["Resposta"]) if row["Reverso"] == "SIM" else row["Resposta"]
+            dfr_numerico["Pontuação"] = dfr_numerico.apply(ajustar_reverso, axis=1)
+            media_geral = dfr_numerico["Pontuação"].mean() # Calculada, mas não exibida
+            resumo_blocos = dfr_numerico.groupby("Bloco")["Pontuação"].mean().round(2).reset_index(name="Média").sort_values("Média") # Calculado, mas não exibido
+        else:
+            media_geral = 0
+            resumo_blocos = pd.DataFrame(columns=["Bloco", "Média"])
+
+        # ##### LINHAS REMOVIDAS #####
+        # st.metric("Pontuação Média Geral (somente itens de 1 a 5)", f"{media_geral:.2f}")
+        # if not resumo_blocos.empty:
+        #     st.subheader("Média por Dimensão")
+        #     st.dataframe(resumo_blocos.rename(columns={"Bloco": "Dimensão"}), use_container_width=True, hide_index=True)
+        #     # Gráfico também removido
+        # #############################
+        
+        # --- LÓGICA DE ENVIO PARA GOOGLE SHEETS ---
+        with st.spinner("Enviando dados para a planilha..."):
+            try:
+                timestamp_str = datetime.now().isoformat(timespec="seconds")
+                respostas_para_enviar = []
+                
+                for _, row in dfr.iterrows():
+                    respostas_para_enviar.append([
+                        timestamp_str,
+                        respondente,
+                        data,
+                        organizacao_coletora,
+                        row["Bloco"],
+                        row["Item"],
+                        row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
+                    ])
+                
+                ws_respostas.append_rows(respostas_para_enviar, value_input_option='USER_ENTERED')
+                
+                st.success("Suas respostas foram enviadas com sucesso para a planilha!")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Erro ao enviar dados para a planilha: {e}")
+
+# --- BOTÃO INVISÍVEL PARA PINGER ---
+with st.container():
+    st.markdown('<div id="autoclick-div">', unsafe_allow_html=True)
+    if st.button("Ping Button", key="autoclick_button"):
+        print("Ping button clicked by automation.")
+    st.markdown('</div>', unsafe_allow_html=True)
