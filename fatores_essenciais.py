@@ -20,7 +20,7 @@ st.markdown(f"""
         div[data-testid="stHeader"], div[data-testid="stDecoration"] {{
             visibility: hidden; height: 0%; position: fixed;
         }}
-        #autoclick-div {{
+        .autoclick-div {{
             display: none;
             visibility: hidden;
             height: 0%;
@@ -241,7 +241,7 @@ if st.button("Finalizar e Enviar Respostas", type="primary"):
                 st.error(f"Erro ao enviar dados para a planilha: {e}")
 
 with st.container():
-    st.markdown('<div id="autoclick-div">', unsafe_allow_html=True)
+    st.markdown('<div class="autoclick-div">', unsafe_allow_html=True)
     if st.button("Ping Button", key="autoclick_button"):
         print("Ping button clicked by automation.")
     st.markdown('</div>', unsafe_allow_html=True)
