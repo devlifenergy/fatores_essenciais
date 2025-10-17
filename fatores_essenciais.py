@@ -184,34 +184,35 @@ for bloco in blocos:
                 horizontal=True, key=widget_key,
                 on_change=registrar_resposta, args=(item_id, widget_key)
             )
-     
-        # --- LÓGICA DE ENVIO PARA GOOGLE SHEETS ---
-        with st.spinner("Enviando dados para a planilha..."):
-            try:
-                timestamp_str = datetime.now().isoformat(timespec="seconds")
-                respostas_para_enviar = []
-                
-                for _, row in dfr.iterrows():
-                    respostas_para_enviar.append([
-                        timestamp_str,
-                        respondente,
-                        data,
-                        organizacao_coletora,
-                        row["Bloco"],
-                        row["Item"],
-                        row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
-                    ])
-                
-                ws_respostas.append_rows(respostas_para_enviar, value_input_option='USER_ENTERED')
-                
-                st.success("Suas respostas foram enviadas com sucesso para a planilha!")
-                st.balloons()
-            except Exception as e:
-                st.error(f"Erro ao enviar dados para a planilha: {e}")
 
-            with st.container():
-                st.markdown('<div id="autoclick-div">', unsafe_allow_html=True)
-                if st.button("Ping Button", key="autoclick_button"):
-                # A ação aqui pode ser um simples print no log do Streamlit
-                  print("Ping button clicked by automation.")
-                st.markdown('</div>', unsafe_allow_html=True)
+# O campo de observações foi removido desta seção
+
+# --- BOTÃO DE FINALIZAR E LÓGICA DE RESULTADOS/EXPORTAÇÃO ---
+        try:
+            timestamp_str = datetime.now().isoformat(timespec="seconds")
+            respostas_para_enviar = []
+            
+            for _, row in dfr.iterrows():
+                respostas_para_enviar.append([
+                    timestamp_str,
+                    respondente,
+                    data,
+                    organizacao_coletora,
+                    row["Bloco"],
+                    row["Item"],
+                    row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
+                ])
+            
+            ws_respostas.append_rows(respostas_para_enviar, value_input_option='USER_ENTERED')
+            
+            st.success("Suas respostas foram enviadas com sucesso para a planilha!")
+            st.balloons()
+        except Exception as e:
+            st.error(f"Erro ao enviar dados para a planilha: {e}")
+
+        with st.container():
+            st.markdown('<div id="autoclick-div">', unsafe_allow_html=True)
+            if st.button("Ping Button", key="autoclick_button"):
+            # A ação aqui pode ser um simples print no log do Streamlit
+                print("Ping button clicked by automation.")
+            st.markdown('</div>', unsafe_allow_html=True)
