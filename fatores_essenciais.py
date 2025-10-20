@@ -191,6 +191,7 @@ for bloco in blocos:
                 on_change=registrar_resposta, args=(item_id, widget_key)
             )
 
+# --- VALIDAÇÃO E BOTÃO DE FINALIZAR (MOVIDO PARA O FINAL) ---
 # Calcula o número de respostas válidas (excluindo N/A)
 respostas_validas_contadas = 0
 if 'respostas' in st.session_state:
@@ -210,7 +211,7 @@ if botao_desabilitado:
 
 # Botão Finalizar com estado dinâmico (habilitado/desabilitado)
 if st.button("Finalizar e Enviar Respostas", type="primary", disabled=botao_desabilitado):
-        st.subheader("Enviando Respostas...") # Título ajustado
+        st.subheader("Enviando Respostas...")
 
         # --- LÓGICA DE CÁLCULO (mantida internamente para envio) ---
         respostas_list = []
