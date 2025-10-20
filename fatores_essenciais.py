@@ -277,7 +277,7 @@ if st.button("Finalizar e Enviar Respostas", type="primary", disabled=botao_desa
                         timestamp_str,
                         respondente,
                         data,
-                        organizacao_coletora,
+                        org_coletora_valida,
                         row["Bloco"],
                         row["Item"],
                         row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
