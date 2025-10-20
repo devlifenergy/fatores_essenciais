@@ -207,7 +207,7 @@ botao_desabilitado = respostas_validas_contadas < limite_respostas
 
 # Exibe aviso se o botão estiver desabilitado
 if botao_desabilitado:
-    st.warning(f"Responda mais de 50% das perguntas (excluindo 'N/A') para habilitar o envio. ({respostas_validas_contadas}/{total_perguntas} válidas)")
+    st.warning(f"Responda 50% das perguntas (excluindo 'N/A') para habilitar o envio. ({respostas_validas_contadas}/{total_perguntas} válidas)")
 
 # Botão Finalizar com estado dinâmico (habilitado/desabilitado)
 if st.button("Finalizar e Enviar Respostas", type="primary", disabled=botao_desabilitado):
