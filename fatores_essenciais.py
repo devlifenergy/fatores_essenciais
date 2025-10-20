@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
+import urllib.parse
 # import matplotlib.pyplot as plt # Removido pois o gráfico foi removido
 
 # --- PALETA DE CORES E CONFIGURAÇÃO DA PÁGINA ---
@@ -134,8 +135,17 @@ with st.container(border=True):
         respondente = st.text_input("Respondente:", key="input_respondente")
         data = st.text_input("Data:", datetime.now().strftime('%d/%m/%Y'))
     with col2_form:
-        organizacao_coletora = st.text_input("Organização Coletora:", "Instituto Wedja de Socionomia", disabled=True)
-
+        # Pega o valor do parâmetro 'org' da URL, decodifica, ou usa o padrão
+        org_coletora_from_url = st.query_params.get("org", "Instituto Wedja de Socionomia")
+        # Decodifica caracteres especiais que podem ter sido codificados na URL (como espaços %20)
+        org_coletora_decoded = urllib.parse.unquote(org_coletora_from_url)
+        
+        # Cria o campo, preenchido com o valor da URL (ou padrão) e desabilitado
+        organizacao_coletora = st.text_input(
+            "Organização Coletora:", 
+            value=org_coletora_decoded, 
+            disabled=True # Garante que o usuário final não possa editar
+        )
 
 # --- INSTRUÇÕES ---
 with st.expander("Ver Orientações aos Respondentes", expanded=True):
