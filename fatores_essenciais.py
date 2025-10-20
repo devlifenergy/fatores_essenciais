@@ -203,7 +203,7 @@ total_perguntas = len(df_itens)
 limite_respostas = total_perguntas / 2
 
 # Determina se o botão deve ser desabilitado
-botao_desabilitado = respostas_validas_contadas <= limite_respostas
+botao_desabilitado = respostas_validas_contadas < limite_respostas
 
 # Exibe aviso se o botão estiver desabilitado
 if botao_desabilitado:
