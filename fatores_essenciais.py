@@ -191,11 +191,25 @@ for bloco in blocos:
                 on_change=registrar_resposta, args=(item_id, widget_key)
             )
 
-# --- BOTÃO DE FINALIZAR E LÓGICA DE RESULTADOS/EXPORTAÇÃO ---
-if st.button("Finalizar e Enviar Respostas", type="primary"):
-    if not st.session_state.respostas:
-        st.warning("Nenhuma resposta foi preenchida.")
-    else:
+# Calcula o número de respostas válidas (excluindo N/A)
+respostas_validas_contadas = 0
+if 'respostas' in st.session_state:
+    for resposta in st.session_state.respostas.values():
+        if resposta is not None and resposta != "N/A":
+            respostas_validas_contadas += 1
+
+total_perguntas = len(df_itens)
+limite_respostas = total_perguntas / 2
+
+# Determina se o botão deve ser desabilitado
+botao_desabilitado = respostas_validas_contadas <= limite_respostas
+
+# Exibe aviso se o botão estiver desabilitado
+if botao_desabilitado:
+    st.warning(f"Responda mais de 50% das perguntas (excluindo 'N/A') para habilitar o envio. ({respostas_validas_contadas}/{total_perguntas} válidas)")
+
+# Botão Finalizar com estado dinâmico (habilitado/desabilitado)
+if st.button("Finalizar e Enviar Respostas", type="primary", disabled=botao_desabilitado):
         st.subheader("Enviando Respostas...") # Título ajustado
 
         # --- LÓGICA DE CÁLCULO (mantida internamente para envio) ---
@@ -222,14 +236,6 @@ if st.button("Finalizar e Enviar Respostas", type="primary"):
             media_geral = 0
             resumo_blocos = pd.DataFrame(columns=["Bloco", "Média"])
 
-        # ##### LINHAS REMOVIDAS #####
-        # st.metric("Pontuação Média Geral (somente itens de 1 a 5)", f"{media_geral:.2f}")
-        # if not resumo_blocos.empty:
-        #     st.subheader("Média por Dimensão")
-        #     st.dataframe(resumo_blocos.rename(columns={"Bloco": "Dimensão"}), use_container_width=True, hide_index=True)
-        #     # O gráfico já havia sido removido
-        # #############################
-        
         # --- LÓGICA DE ENVIO PARA GOOGLE SHEETS ---
         with st.spinner("Enviando dados para a planilha..."):
             try:
