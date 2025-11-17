@@ -244,7 +244,7 @@ else:
         with st.expander(f"{prefixo_bloco}", expanded=True):
             for _, row in df_bloco.iterrows():
                 item_id = row["ID"]
-                label = f'({item_id})' + (' (R)' if row["Reverso"] == 'SIM' else '')
+                label = f'({item_id} {row["Item"]})' + (' (R)' if row["Reverso"] == 'SIM' else '')
                 widget_key = f"radio_{item_id}"
                 st.radio(
                     label, options=["N/A", 1, 2, 3, 4, 5],
