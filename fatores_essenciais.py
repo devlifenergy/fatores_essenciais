@@ -302,11 +302,17 @@ else:
             with st.spinner("Enviando dados para a planilha..."):
                 try:
                     timestamp_str = datetime.now().isoformat(timespec="seconds")
+                    
+                    # --- GERAÇÃO DO ID DA ORGANIZAÇÃO ---
+                    nome_limpo = organizacao_coletora.strip().upper()
+                    id_organizacao = hashlib.md5(nome_limpo.encode('utf-8')).hexdigest()[:8].upper()
+
                     respostas_para_enviar = []
                     
                     for _, row in dfr.iterrows():
                         respostas_para_enviar.append([
                             timestamp_str,
+                            id_organizacao,
                             respondente,
                             data,
                             org_coletora_valida,
