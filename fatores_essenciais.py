@@ -311,29 +311,29 @@ else:
                     
                     for _, row in dfr.iterrows():
                         resposta = row["Resposta"]
-                    pontuacao = "N/A" # Valor padrão se for N/A ou None
+                        pontuacao = "N/A" # Valor padrão se for N/A ou None
                     
-                    if pd.notna(resposta) and resposta != "N/A":
-                        try:
-                            valor = int(resposta)
-                            if row["Reverso"] == "SIM":
-                                pontuacao = 6 - valor # Inverte: 1->5, 2->4, etc.
-                            else:
-                                pontuacao = valor # Normal
-                        except ValueError:
-                            pass
+                        if pd.notna(resposta) and resposta != "N/A":
+                            try:
+                                valor = int(resposta)
+                                if row["Reverso"] == "SIM":
+                                    pontuacao = 6 - valor # Inverte: 1->5, 2->4, etc.
+                                else:
+                                    pontuacao = valor # Normal
+                            except ValueError:
+                                pass
 
-                    respostas_para_enviar.append([
-                        timestamp_str,
-                        id_organizacao,
-                        respondente,
-                        data,
-                        org_coletora_valida,
-                        row["Bloco"],
-                        row["Item"],
-                        row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
-                        pontuacao
-                    ])
+                        respostas_para_enviar.append([
+                            timestamp_str,
+                            id_organizacao,
+                            respondente,
+                            data,
+                            org_coletora_valida,
+                            row["Bloco"],
+                            row["Item"],
+                            row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
+                            pontuacao
+                        ])
                     
                     ws_respostas.append_rows(respostas_para_enviar, value_input_option='USER_ENTERED')
                     
