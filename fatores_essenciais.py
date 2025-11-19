@@ -323,17 +323,17 @@ else:
                         except ValueError:
                             pass
 
-                        respostas_para_enviar.append([
-                            timestamp_str,
-                            id_organizacao,
-                            respondente,
-                            data,
-                            org_coletora_valida,
-                            row["Bloco"],
-                            row["Item"],
-                            row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
-                            pontuacao
-                        ])
+                    respostas_para_enviar.append([
+                        timestamp_str,
+                        id_organizacao,
+                        respondente,
+                        data,
+                        org_coletora_valida,
+                        row["Bloco"],
+                        row["Item"],
+                        row["Resposta"] if pd.notna(row["Resposta"]) else "N/A",
+                        pontuacao
+                    ])
                     
                     ws_respostas.append_rows(respostas_para_enviar, value_input_option='USER_ENTERED')
                     
